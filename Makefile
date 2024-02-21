@@ -1,5 +1,5 @@
-wish: main.o modes.o echo.o
-	gcc -o wish main.o modes.o echo.o
+wish: main.o modes.o commands.o error.o
+	gcc -o wish main.o modes.o commands.o error.o
 
 main: main.c
 	gcc -c main.c
@@ -7,6 +7,8 @@ main: main.c
 modes: modes.c
 	gcc -c modes.c
 
-echo: echo.c
-	gcc -c echo.c
+commands: commands.c
+	gcc -c commands.c
 
+error: error.c
+	gcc -c error.c
