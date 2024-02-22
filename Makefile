@@ -1,11 +1,11 @@
-wish: main.o modes.o commands.o error.o
-	gcc -o wish main.o modes.o commands.o error.o
+wish: main.o shell.o commands.o error.o
+	gcc -o wish main.o shell.o commands.o error.o
 
 main: main.c
 	gcc -c main.c
 
-modes: modes.c
-	gcc -c modes.c
+shell: shell.c
+	gcc -c shell.c
 
 commands: commands.c
 	gcc -c commands.c
