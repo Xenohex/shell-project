@@ -28,6 +28,17 @@ int identify_built_in_cmd(char **args, int num_args) {
   return 1; // command is not built-in
 }
 
+char *remove_newline(char path[]) {
+  int i = 0;
+  while (path[i] != '\n') {
+    if (path[i] == '\n')
+      path[i] = '\0';
+    i++;
+  }
+  return path;
+}
+
+// for testing. remove in the future
 void print_array(char **args, int num_args) {
   for (int i = 0; i < num_args; i++) {
     printf("%s\n", args[i]);
@@ -35,13 +46,19 @@ void print_array(char **args, int num_args) {
 }
 
 void execute_external_cmd(char **args, int num_args) {
+  // create the target path
+  char fullpath[MAX_CHAR_LIMIT];
+  strcpy(fullpath, path);
+  strcat(fullpath, args[0]);
+
   char **p = args++; // do this when you need to cut off the first element
-  char *fullpath = path;
-  // fullpath = strcat(fullpath, args[0]);
-  //  printf("path: %s, args[0]: %s\n", fullpath, args[0]);
-  //   if (access(args[0], X_OK) == 0) {
-  //    do nothing for now
-  //   }
+  printf("%sEND\n", fullpath);
+  // check if accesss to command exists, if so, execute it
+  if (access(fullpath, X_OK) == 0) {
+    printf("Execute Privileges: True\n");
+  } else {
+    printf("no privs\n");
+  }
 }
 
 int split_arguments(char *input, char **args) {

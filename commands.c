@@ -6,7 +6,7 @@
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAIL 1
-#define DEFAULT_PATH "/bin"
+#define DEFAULT_PATH "/bin/"
 
 // todo this should eventually accept multiple paths
 char *path = DEFAULT_PATH;
