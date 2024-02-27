@@ -54,14 +54,21 @@ void print_array(char **args, int num_args) {
 
 // if command cannot be found in internal files, search path for it
 void execute_external_cmd(char **args, int num_args) {
-
-  // create the target path
+  // printf("looking for %s\n", args[0]);
+  //  create the target path
   char fullpath[MAX_CHAR_LIMIT];
   strcpy(fullpath, path);
-  strcat(fullpath, args[0]);
+  // create a copy of args[0]
+  char cmd[MAX_CHAR_LIMIT];
+  strcpy(cmd, args[0]);
 
-  char **p = args++; // do this when you need to cut off the first element
-  // check if accesss to command exists, if so, execute it
+  // concatenate path
+  args[0] = strcat(fullpath, cmd);
+  // printf("in %s\n", args[0]);
+
+  // printf("args[0]: %s\n", args[0]);
+
+  //  check if accesss to command exists, if so, execute it
   if (access(fullpath, X_OK) == 0) {
     int rc = fork();
     if (rc < 0) {
@@ -70,8 +77,7 @@ void execute_external_cmd(char **args, int num_args) {
       exit(1);
     } else if (rc == 0) {
       // child (new process)
-      execv(fullpath, p);
-      sleep(1);
+      execv(args[0], args);
     } else {
       // parent goes down this path (original process)
       int wc = wait(NULL);
@@ -91,6 +97,7 @@ int split_arguments(char *input, char **args) {
     token = strtok(NULL, " ");
     argument_count++;
   }
+  args[argument_count] = NULL;
   return argument_count;
 }
 

@@ -1,14 +1,15 @@
+#include "commands.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "error.h"
 
+#include <stdio.h>
+
 #define EXIT_SUCCESS 0
 #define EXIT_FAIL 1
-#define DEFAULT_PATH "/bin/"
 
-// todo this should eventually accept multiple paths
 char *path = DEFAULT_PATH;
 
 // return 0 if string length < 2, return 1 otherwise
@@ -28,33 +29,21 @@ void cmd_exit(char **text, int num_args) {
   }
 }
 
-void cmd_cd(char **text, int num_args) {
-  if (num_args < 2 || num_args > 3 ||
-      (num_args == 3 && str_is_empty(text[2]) != 0))
+void cmd_cd(char **args, int num_args) {
+  if (chdir(args[1]) != 0)
     error();
-  else {
-    if (chdir(text[1]) != 0)
-      error();
-  }
-  // print current active directory
-  // char cwd[128];
-  // if (getcwd(cwd, sizeof(cwd)) != NULL) {
-  //   printf("Current working dir: %s\n", cwd);
-  // } else {
-  //   perror("getcwd() error");
-  // }
 }
+// print current active directory
+// char cwd[128];
+// if (getcwd(cwd, sizeof(cwd)) != NULL) {
+//   printf("Current working dir: %s\n", cwd);
+// } else {
+//   perror("getcwd() error");
+// }
 
-void cmd_path(char **text, int num_args) {
-  if (num_args == 2) {
-    path = text[1];
-    if (str_is_empty(text[1]) == 0)
-      path = "/";
-  } else if (num_args == 1) {
-    path = DEFAULT_PATH;
-  } else {
-    // more path options not implemented yet
-  }
+void cmd_path(char **args, int num_args) {
+  puts("attempting path change");
+  path = args[1];
 }
 
 // // prints all arguments excluding the command
