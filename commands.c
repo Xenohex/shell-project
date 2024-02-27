@@ -5,12 +5,10 @@
 
 #include "error.h"
 
-#include <stdio.h>
-
 #define EXIT_SUCCESS 0
 #define EXIT_FAIL 1
 
-char *path = DEFAULT_PATH;
+char path[] = DEFAULT_PATH;
 
 // return 0 if string length < 2, return 1 otherwise
 int str_is_empty(char *str) {
@@ -33,24 +31,19 @@ void cmd_cd(char **args, int num_args) {
   if (chdir(args[1]) != 0)
     error();
 }
-// print current active directory
-// char cwd[128];
-// if (getcwd(cwd, sizeof(cwd)) != NULL) {
-//   printf("Current working dir: %s\n", cwd);
-// } else {
-//   perror("getcwd() error");
-// }
 
 void cmd_path(char **args, int num_args) {
-  puts("attempting path change");
-  path = args[1];
+  if (num_args < 2) {
+    strcpy(path, "");
+  } else {
+    strcpy(path, args[1]);
+    if (path[strlen(path) - 1] != '/') {
+      strcat(path, "/"); // Concatenate '/' to the end of the string
+    }
+  }
 }
 
-// // prints all arguments excluding the command
-// void cmd_echo(char **text, int num_args) {
-//   for (int i = 1; i < num_args; i++) {
-//     printf("%s", text[i]);
-//     if (i != (num_args - 1))
-//       printf(" ");
-//   }
-// }
+char *return_path() {
+  // puts(path);
+  return path;
+}

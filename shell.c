@@ -11,8 +11,6 @@
 #define MAX_CHAR_LIMIT 128
 #define CMD_INDEX 0
 
-extern char *path;
-
 // return 0 if command is built in, 1 if not
 int identify_built_in_cmd(char **args, int num_args) {
 
@@ -29,14 +27,7 @@ int identify_built_in_cmd(char **args, int num_args) {
   return 1; // command is not built-in
 }
 
-void print_chars(char *text) {
-  for (int i = 0; i < strlen(text); i++) {
-    printf("%c ", text[i]);
-  }
-}
-
 void remove_newline(char *text) {
-  // printf("length: %lu\n", strlen(text));
   for (int i = 0; i < strlen(text); i++) {
     if (text[i] == '\n') {
       text[i] = '\0';
@@ -45,31 +36,20 @@ void remove_newline(char *text) {
   // print_chars(text);
 }
 
-// for testing. remove in the future
-void print_array(char **args, int num_args) {
-  for (int i = 0; i < num_args; i++) {
-    printf("%s\n", args[i]);
-  }
-}
-
 // if command cannot be found in internal files, search path for it
 void execute_external_cmd(char **args, int num_args) {
-  // printf("looking for %s\n", args[0]);
-  //  create the target path
+  //   create the target path
   char fullpath[MAX_CHAR_LIMIT];
-  strcpy(fullpath, path);
+  strcpy(fullpath, return_path());
   // create a copy of args[0]
   char cmd[MAX_CHAR_LIMIT];
   strcpy(cmd, args[0]);
 
   // concatenate path
-  args[0] = strcat(fullpath, cmd);
-  // printf("in %s\n", args[0]);
-
-  // printf("args[0]: %s\n", args[0]);
+  strcpy(cmd, strcat(fullpath, cmd));
 
   //  check if accesss to command exists, if so, execute it
-  if (access(fullpath, X_OK) == 0) {
+  if (access(cmd, X_OK) == 0) {
     int rc = fork();
     if (rc < 0) {
       // fork failed; exit
@@ -77,7 +57,7 @@ void execute_external_cmd(char **args, int num_args) {
       exit(1);
     } else if (rc == 0) {
       // child (new process)
-      execv(args[0], args);
+      execv(cmd, args);
     } else {
       // parent goes down this path (original process)
       int wc = wait(NULL);
