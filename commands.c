@@ -29,13 +29,20 @@ void cmd_exit(char **text, int num_args) {
 }
 
 void cmd_cd(char **text, int num_args) {
-  if (num_args > 2 || num_args < 2)
+  if (num_args < 2 || num_args > 3 ||
+      (num_args == 3 && str_is_empty(text[2]) != 0))
     error();
   else {
-    if (str_is_empty(text[1]) == 0)
+    if (chdir(text[1]) != 0)
       error();
-    chdir(text[1]);
   }
+  // print current active directory
+  // char cwd[128];
+  // if (getcwd(cwd, sizeof(cwd)) != NULL) {
+  //   printf("Current working dir: %s\n", cwd);
+  // } else {
+  //   perror("getcwd() error");
+  // }
 }
 
 void cmd_path(char **text, int num_args) {
