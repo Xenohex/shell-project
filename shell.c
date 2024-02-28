@@ -50,6 +50,7 @@ void execute_external_cmd(char **args, int num_args) {
 
   //  check if accesss to command exists, if so, execute it
   if (access(cmd, X_OK) == 0) {
+    // access granted
     int rc = fork();
     if (rc < 0) {
       // fork failed; exit
@@ -63,6 +64,7 @@ void execute_external_cmd(char **args, int num_args) {
       int wc = wait(NULL);
     }
   } else {
+    // access denied OR doesn't exist
     error();
   }
 }
