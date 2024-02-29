@@ -1,3 +1,8 @@
+/*
+Original Author: Austin Pliska
+Traded with: Kevin Pickelman
+*/
+
 #include "shell.h"
 
 #define NO_ARGUMENTS 1
