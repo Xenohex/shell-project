@@ -40,15 +40,16 @@ void remove_newline(char *text) {
 void execute_external_cmd(char **args, int num_args) {
   //   create the target path
   char fullpath[MAX_CHAR_LIMIT];
-  strcpy(fullpath, return_path());
+  strcpy(fullpath, return_path()); // /bin/
   // create a copy of args[0]
   char cmd[MAX_CHAR_LIMIT];
-  strcpy(cmd, args[0]);
+  strcpy(cmd, args[0]); // ls
 
   // concatenate path
-  strcpy(cmd, strcat(fullpath, cmd));
+  strcpy(cmd, strcat(fullpath, cmd)); // /bin/ls
 
   //  check if accesss to command exists, if so, execute it
+  // W_OK = write, R_OK = read, X_OK = execute
   if (access(cmd, X_OK) == 0) {
     // access granted
     int rc = fork();
