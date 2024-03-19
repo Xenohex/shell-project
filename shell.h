@@ -7,4 +7,7 @@ void batch_mode(char filename[]);
 int identify_built_in_cmd(char **args, int num_args);
 void execute_external_cmd(char **args, int num_args);
 
+// check_for_redirection(char **args, int num_args);
+// redirect(char **args, int num_args, char filename[]);
+
 #endif

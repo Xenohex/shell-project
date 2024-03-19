@@ -2,3 +2,4 @@
 *.txt
 wish
 test/
+.vscode/
