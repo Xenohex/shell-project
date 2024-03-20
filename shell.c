@@ -7,6 +7,8 @@
 
 #include "commands.h"
 #include "error.h"
+#include "redirection.h"
+#include "shared.h"
 
 #define CMD_INDEX 0
 
@@ -29,22 +31,20 @@ int identify_built_in_cmd(char **args, int num_args) {
   return 1; // command is not built-in
 }
 
-void remove_newline(char *text) {
-  for (int i = 0; i < strlen(text); i++) {
-    if (text[i] == '\n') {
-      text[i] = '\0';
-    }
-  }
-  // print_chars(text);
-}
-
 // if command cannot be found in internal files, search path for it
 void execute_external_cmd(char **args, int num_args) {
+
+  int r_index = find_redirection(args, num_args);
+  printf("r_index: %d\n", r_index);
+  find_redirection_type(args, num_args, r_index);
+
   int cmd_found = 0; // if cmd_found is set to 1, the command is found
+  int link[2];       // for piping/redirection
 
   // loop through all paths
   for (int path_counter = 0; path_counter < path_count && cmd_found != 1;
        path_counter++) {
+
     // create the target path
     char fullpath[MAX_CHARS];
     strcpy(fullpath, path[path_counter]);
@@ -55,7 +55,6 @@ void execute_external_cmd(char **args, int num_args) {
 
     // concatenate path
     strcpy(cmd, strcat(fullpath, cmd));
-    printf("Fullpath: %s\n", fullpath); // REMOVE
 
     //  check if accesss to command exists, if so, execute it
     if (access(cmd, X_OK) == 0) {
@@ -65,94 +64,28 @@ void execute_external_cmd(char **args, int num_args) {
       // todo insert pipe around here somewhere
 
       int rc = fork();
+
       if (rc < 0) {
         // fork failed; exit
-        error();
-        exit(1);
+        error(FATAL_ERROR);
       } else if (rc == 0) {
         // child (new process)
+
         execv(cmd, args);
       } else {
         // parent goes down this path (original process)
         int wc = wait(NULL);
       }
-    } else {
+    } else { // access fails
       if (path_counter == (path_count - 1))
-        error(); // if there are multiple paths, only errors if it never finds
-                 // command through all paths
+        error(NON_FATAL_ERROR); // if there are multiple paths, only errors if
+                                // it never finds command through any of the
+                                // given paths
     }
-  }
+  } // end loop
 }
 
-// split the given arguments into separate pieces
-int split_arguments(char *input, char **args) {
-  char *token = strtok(input, " ");
-  int argument_count = 0;
-
-  for (int i = 0; token != NULL; i++) {
-    args[i] = token;
-    token = strtok(NULL, " ");
-    argument_count++;
-  }
-  args[argument_count] = NULL;
-  return argument_count;
-}
-
-/*
-return -1 for no redirection.
-if return 0, call error
-if return > 0, that is the index of the argument with the redirection operator
-*/
-int check_for_redirection(char **args, int num_args) {
-  char *redirection;
-  int r_index = -1;
-  int redirection_found = 0;
-
-  for (int i = 0; i < num_args; i++) {
-    if (strchr(args[i], '>') != NULL) {
-      if (redirection_found == 1) {
-        error();
-        break;
-      }
-      r_index = i;
-      redirection_found = 1;
-    }
-  }
-  if (r_index == num_args - 1 &&
-      args[r_index][strlen(args[r_index]) - 1] == '>') {
-    error(); // if redirection operator is the last (or only) character in the
-             // last argument
-  }
-
-  return r_index;
-}
-
-void redirect(char **args, int num_args, char filename[]) { // todo make this
-  FILE *fp;
-  char line[MAX_CHARS];
-
-  if (access(filename, F_OK) != 0)
-    truncate(filename, 0); // deletes everything in the file
-
-  // opening file for reading
-  fp = fopen(filename, "w");
-  if (fp == NULL) {
-    error();
-  }
-  while (fgets(line, MAX_CHARS, fp) != NULL) {
-
-    remove_newline(line);
-    // split up the string
-    char *arguments[MAX_CHARS];
-    int argument_count = split_arguments(line, arguments);
-
-    if (identify_built_in_cmd(arguments, argument_count) == 1)
-      execute_external_cmd(arguments, argument_count);
-  }
-  fclose(fp);
-}
-
-// ./wish with no arguments
+// ./wish with no arguments, runs until exited by user or fatal error
 void interactive_mode() {
   printf("wish> ");
 
@@ -171,7 +104,8 @@ void interactive_mode() {
     execute_external_cmd(arguments, argument_count);
 }
 
-// ./wish <filename>
+// ./wish <filename>, interactive mode with predefined commands. runs until exit
+// call or end of file
 void batch_mode(char filename[]) {
   FILE *fp;
   char line[MAX_CHARS];

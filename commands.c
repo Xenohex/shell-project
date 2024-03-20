@@ -1,57 +1,32 @@
 #include "commands.h"
-#include <stdio.h> // remove?
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "error.h"
-
-#define MAX_CHAR_LIMIT 128
-#define MAX_PATHS = 32
-#define EXIT_SUCCESS 0
-#define EXIT_FAIL 1
+#include "shared.h"
 
 char path[MAX_ARGS][MAX_CHARS] = {DEFAULT_PATH};
 int path_count = 1; // should never be 0
 
-// return 0 if string length < 2, return 1 otherwise
-int str_is_empty(char *str) {
-  if (strlen(str) < 2)
-    return 0;
-  return 1;
-}
-
+// exits the program with successful code
 void cmd_exit(char **text, int num_args) {
   if (num_args > 1) {
     if (str_is_empty(text[1]) == 0)
       exit(0);
-    error();
+    error(NON_FATAL_ERROR);
   } else {
     exit(0);
   }
 }
 
+// chooses a new current working directory for the program
 void cmd_cd(char **args, int num_args) {
   if (chdir(args[1]) != 0)
-    error();
+    error(NON_FATAL_ERROR);
 }
 
-void print_array_pointer(char **args, int num_args) { // REMOVE
-  printf("array: ");
-  for (int i = 0; i < num_args; i++) {
-    printf("%s ", args[i]);
-  }
-  puts("");
-} // REMOVE
-
-void print_array_array(char args[MAX_ARGS][MAX_CHARS], int num_args) { // REMOVE
-  printf("array: ");
-  for (int i = 0; i < num_args; i++) {
-    printf("%s ", args[i]);
-  }
-  puts("");
-} // REMOVE
-
+// chooses one or multiple possible paths to search for executables
 void cmd_path(char **args, int num_args) {
   int arg_len = 0;
   if (num_args < 2) {
