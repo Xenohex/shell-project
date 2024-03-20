@@ -4,6 +4,8 @@
 #define NON_FATAL_ERROR 0
 #define FATAL_ERROR 1
 
+// prints an error message if error code is non-fatal.
+// otherwise, ends the program
 void error(int code);
 
 #endif

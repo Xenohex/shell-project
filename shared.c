@@ -51,6 +51,7 @@ void reverse_string(char *str) {
 
 //
 // FUNCTIONS FOR TESTING PURPOSES ONLY GO HERE
+// These should all probably get removed once the program is finished
 //
 void print_array_pointer(char **args, int num_args) { // REMOVE
   printf("array: ");
@@ -58,7 +59,7 @@ void print_array_pointer(char **args, int num_args) { // REMOVE
     printf("%s ", args[i]);
   }
   puts("");
-} // REMOVE
+}
 
 void print_array_array(char args[MAX_ARGS][MAX_CHARS], int num_args) { // REMOVE
   printf("array: ");
@@ -66,4 +67,4 @@ void print_array_array(char args[MAX_ARGS][MAX_CHARS], int num_args) { // REMOVE
     printf("%s ", args[i]);
   }
   puts("");
-} // REMOVE
+}
