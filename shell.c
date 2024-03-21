@@ -34,55 +34,82 @@ int identify_built_in_cmd(char **args, int num_args) {
 // if command cannot be found in internal files, search path for it
 void execute_external_cmd(char **args, int num_args) {
 
-  int r_index = find_redirection(args, num_args);
-  printf("r_index: %d\n", r_index);
-  find_redirection_type(args, num_args, r_index);
+  char output_file[MAX_CHARS] = "";
+  char *output_file_p = output_file;
+  int do_execute = 1;  // executes command if set to 1
+  int do_redirect = 0; // redirects if set to 1
+
+  int r_index = -1;
+  r_index = find_redirection(args, num_args);
+  if (r_index > 0) { // redirection location found and valid
+    int r_type = find_redirection_type(args, num_args, r_index);
+    num_args =
+        filter_redirection(args, num_args, r_index, r_type, output_file_p);
+    do_redirect = 1;
+  } else if (r_index == -2) {
+    do_execute = -1; // redirection error that causes impossible command
+  }
+  // print_array_pointer(args, num_args);
 
   int cmd_found = 0; // if cmd_found is set to 1, the command is found
-  int link[2];       // for piping/redirection
+  char output_text[4096];
+  int link[2]; // for piping/redirection
 
   // loop through all paths
-  for (int path_counter = 0; path_counter < path_count && cmd_found != 1;
-       path_counter++) {
+  if (do_execute == 1) {
+    for (int path_counter = 0; path_counter < path_count && cmd_found != 1;
+         path_counter++) {
 
-    // create the target path
-    char fullpath[MAX_CHARS];
-    strcpy(fullpath, path[path_counter]);
+      // create the target path
+      char fullpath[MAX_CHARS];
+      strcpy(fullpath, path[path_counter]);
 
-    // create a copy of args[0]
-    char cmd[MAX_CHARS];
-    strcpy(cmd, args[0]);
+      // create a copy of args[0]
+      char cmd[MAX_CHARS];
+      strcpy(cmd, args[0]);
 
-    // concatenate path
-    strcpy(cmd, strcat(fullpath, cmd));
+      // concatenate path
+      strcpy(cmd, strcat(fullpath, cmd));
 
-    //  check if accesss to command exists, if so, execute it
-    if (access(cmd, X_OK) == 0) {
-      // access granted
-      cmd_found = 1; // ensures the loop won't check any more paths
+      //  check if accesss to command exists, if so, execute it
+      if (access(cmd, X_OK) == 0) {
+        // access granted
+        cmd_found = 1; // ensures the loop won't check any more paths
 
-      // todo insert pipe around here somewhere
+        // todo insert pipe around here somewhere
 
-      int rc = fork();
+        int rc = fork();
 
-      if (rc < 0) {
-        // fork failed; exit
-        error(FATAL_ERROR);
-      } else if (rc == 0) {
-        // child (new process)
-
-        execv(cmd, args);
-      } else {
-        // parent goes down this path (original process)
-        int wc = wait(NULL);
+        if (rc < 0) {
+          // fork failed; exit
+          error(FATAL_ERROR);
+        } else if (rc == 0) {
+          if (do_redirect == 1) {
+            if (pipe(link) < 1)
+              error(FATAL_ERROR);
+            dup2(link[1], STDOUT_FILENO);
+            close(link[0]);
+            close(link[1]);
+          }
+          // child (new process)
+          execv(cmd, args);
+        } else {
+          // parent goes down this path (original process)
+          if (do_redirect == 1) {
+            close(link[1]);
+            int nbytes = read(link[0], output_text, sizeof(output_text));
+            redirect(output_text, output_file);
+            wait(NULL);
+          }
+        }
+      } else { // access fails
+        if (path_counter == (path_count - 1))
+          error(NON_FATAL_ERROR); // if there are multiple paths, only errors if
+                                  // it never finds command through any of the
+                                  // given paths
       }
-    } else { // access fails
-      if (path_counter == (path_count - 1))
-        error(NON_FATAL_ERROR); // if there are multiple paths, only errors if
-                                // it never finds command through any of the
-                                // given paths
-    }
-  } // end loop
+    } // end loop
+  }   // end if(execute == 0)
 }
 
 // ./wish with no arguments, runs until exited by user or fatal error

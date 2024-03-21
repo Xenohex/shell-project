@@ -12,7 +12,6 @@ void remove_newline(char *text);
 int split_arguments(char *input, char **args);
 // reverses inputted string
 void reverse_string(char *str);
-
 //
 // FUNCTIONS FOR TESTING PURPOSES ONLY GO HERE
 //
