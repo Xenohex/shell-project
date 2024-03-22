@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     batch_mode(argv[1]);
   } else { // too many arguments
     error(FATAL_ERROR);
+    // error_test(FATAL_ERROR, "main.c: too many arguments");
   }
 
   return 0;

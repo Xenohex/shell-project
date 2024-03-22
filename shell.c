@@ -42,18 +42,18 @@ void execute_external_cmd(char **args, int num_args) {
   int r_index = -1;
   r_index = find_redirection(args, num_args);
   if (r_index > 0) { // redirection location found and valid
+
     int r_type = find_redirection_type(args, num_args, r_index);
     num_args =
         filter_redirection(args, num_args, r_index, r_type, output_file_p);
     do_redirect = 1;
+
   } else if (r_index == -2) {
     do_execute = -1; // redirection error that causes impossible command
   }
   // print_array_pointer(args, num_args);
 
   int cmd_found = 0; // if cmd_found is set to 1, the command is found
-  char output_text[4096];
-  int link[2]; // for piping/redirection
 
   // loop through all paths
   if (do_execute == 1) {
@@ -76,37 +76,44 @@ void execute_external_cmd(char **args, int num_args) {
         // access granted
         cmd_found = 1; // ensures the loop won't check any more paths
 
-        // todo insert pipe around here somewhere
+        char output_text[4096];
+        int link[2]; // for piping/redirection
 
+        if (do_redirect == 1)
+          if (pipe(link) < 0) {
+            error(FATAL_ERROR);
+            // error_test(FATAL_ERROR, "ext_cmd: pipe failed");
+          }
         int rc = fork();
 
         if (rc < 0) {
           // fork failed; exit
           error(FATAL_ERROR);
+          // error_test(FATAL_ERROR, "ext_cmd: fork failed");
         } else if (rc == 0) {
+          // child (new process)
           if (do_redirect == 1) {
-            if (pipe(link) < 1)
-              error(FATAL_ERROR);
             dup2(link[1], STDOUT_FILENO);
             close(link[0]);
             close(link[1]);
           }
-          // child (new process)
           execv(cmd, args);
         } else {
           // parent goes down this path (original process)
+          close(link[1]);
           if (do_redirect == 1) {
-            close(link[1]);
             int nbytes = read(link[0], output_text, sizeof(output_text));
-            redirect(output_text, output_file);
-            wait(NULL);
+            redirect(output_text, nbytes, output_file);
           }
+          wait(NULL);
         }
       } else { // access fails
-        if (path_counter == (path_count - 1))
-          error(NON_FATAL_ERROR); // if there are multiple paths, only errors if
-                                  // it never finds command through any of the
-                                  // given paths
+        if (path_counter == (path_count - 1)) {
+          error(NON_FATAL_ERROR); // if there are multiple paths, only
+                                  // errors if it never finds command
+                                  // through any of the given paths
+          // error_test(FATAL_ERROR, "ext_cmd: no cmd found");
+        }
       }
     } // end loop
   }   // end if(execute == 0)
@@ -131,26 +138,37 @@ void interactive_mode() {
     execute_external_cmd(arguments, argument_count);
 }
 
-// ./wish <filename>, interactive mode with predefined commands. runs until exit
-// call or end of file
+// ./wish <filename>, interactive mode with predefined commands. runs until
+// exit call or end of file
 void batch_mode(char filename[]) {
   FILE *fp;
   char line[MAX_CHARS];
 
-  // opening file for reading
-  fp = fopen(filename, "r");
-  if (fp == NULL) {
-    perror("Error opening file");
-  }
-  while (fgets(line, MAX_CHARS, fp) != NULL) {
+  if (access(filename, R_OK) == 0) {
 
-    remove_newline(line);
-    // split up the string
-    char *arguments[MAX_CHARS];
-    int argument_count = split_arguments(line, arguments);
+    // opening file for reading
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+      perror("Error opening file");
+    }
 
-    if (identify_built_in_cmd(arguments, argument_count) == 1)
-      execute_external_cmd(arguments, argument_count);
+    char trim_str[MAX_CHARS];
+    while (fgets(line, MAX_CHARS, fp) != NULL) {
+
+      // trim_white_space(line, trim_str);
+      remove_newline(line);
+      // printf("trim_str: %s", trim_str);
+
+      // split up the string
+      char *arguments[MAX_CHARS];
+      int argument_count = split_arguments(line, arguments);
+
+      if (identify_built_in_cmd(arguments, argument_count) == 1)
+        execute_external_cmd(arguments, argument_count);
+    }
+    fclose(fp);
+
+  } else {
+    error(FATAL_ERROR); // bad batch file
   }
-  fclose(fp);
 }

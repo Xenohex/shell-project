@@ -7,5 +7,6 @@
 // prints an error message if error code is non-fatal.
 // otherwise, ends the program
 void error(int code);
+void error_test(int code, char msg[]);
 
 #endif

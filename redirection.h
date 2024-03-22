@@ -22,6 +22,6 @@ string to move the output text to. Returns new num_args;
 int filter_redirection(char **args, int num_args, int r_index,
                        int redirection_type, char *redirect_str_ptr);
 // redirects input text given to a text file of given name
-void redirect(char text[], char filename[]);
+void redirect(char text[], int nbytes, char filename[]);
 
 #endif

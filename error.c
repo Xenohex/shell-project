@@ -9,3 +9,9 @@ void error(int code) {
   if (code == FATAL_ERROR)
     exit(1);
 }
+
+// testing
+void error_test(int code, char msg[]) {
+  fprintf(stderr, "%s\n", msg);
+  error(code);
+}

@@ -16,12 +16,41 @@ int str_is_empty(char *str) {
 
 // replaces all instances of the newline character with the NULL character
 void remove_newline(char *text) {
-  for (int i = 0; i < strlen(text); i++) {
+  int length = strlen(text);
+  for (int i = 0; i < length; i++) {
     if (text[i] == '\n') {
       text[i] = '\0';
     }
   }
-  // print_chars(text);
+  // int idx = 0;
+  // while (text[idx] != '\0') {
+  //   if (text[idx] == '\n') {
+  //     text[idx] = '\0';
+  //   }
+  //   idx++;
+  // }
+}
+
+// removes leading whitespace
+void trim_white_space(char *str, char *trim_str) {
+  int idx = 0, j, k = 0;
+
+  // Iterate String until last
+  // leading space character
+  while (str[idx] == ' ' || str[idx] == '\t' || str[idx] == '\n') {
+    idx++;
+  }
+
+  // Run a for loop from index until the original
+  // string ends and copy the content of str to str1
+  for (j = idx; str[j] != '\0'; j++) {
+    trim_str[k] = str[j];
+    k++;
+  }
+
+  // Insert a string terminating character
+  // at the end of new string
+  // trim_str[k] = '\0';
 }
 
 // split the given arguments into separate pieces

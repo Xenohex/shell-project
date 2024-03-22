@@ -36,8 +36,11 @@ int find_redirection(char **args, int num_args) {
   */
   if ((r_index == num_args - 1 &&
        args[r_index][strlen(args[r_index]) - 1] == '>') ||
-      r_index == 0 || (r_index > 0 && num_args - r_index > 1)) {
-    error(NON_FATAL_ERROR); // if redirection operator is found but not valid
+      r_index == 0 || (r_index > 0 && (num_args - r_index - 1) > 1)) {
+    error(NON_FATAL_ERROR); // > is found but not valid
+    /*error_test(
+        NON_FATAL_ERROR,
+        "find_redirection: redirection invalid");*/
     return -2;
   }
 
@@ -108,13 +111,21 @@ int filter_redirection(char **args, int num_args, int r_index,
   * set args[r_index] to NULL
   * reduce num_args
   */
+  char temp_redirect_str[MAX_CHARS];
+  char *temp_redirect_str_ptr = temp_redirect_str;
+
   switch (redirection_type) {
   case ALONE: // cmd arg > output
-    if (num_args - r_index != 2)
-      error(NON_FATAL_ERROR); // if there are more than 2 args after '>', or
-                              // somehow only one argument
-    else {
-      strcpy(redirect_str_ptr, args[r_index + 1]);
+    if (num_args - r_index != 2) {
+      error(NON_FATAL_ERROR);
+      /*error_test(
+          NON_FATAL_ERROR,
+          "filter_redirection: more than 2 args after >");*/ // if there are more
+                                                           // than 2 args after
+                                                           // '>', or somehow
+                                                           // only one argument
+    } else {
+      strcpy(temp_redirect_str_ptr, args[r_index + 1]);
       args[r_index] = NULL;
       num_args -= 2;
     }
@@ -124,9 +135,11 @@ int filter_redirection(char **args, int num_args, int r_index,
     if (num_args - r_index != 1)
       // if there are more arguments after r_index
       error(NON_FATAL_ERROR);
+    /*error_test(NON_FATAL_ERROR,
+               "filter_redirection: too many arguments after >");*/
     else {
-      strcpy(redirect_str_ptr, args[r_index]);
-      redirect_str_ptr++;
+      strcpy(temp_redirect_str_ptr, args[r_index]);
+      temp_redirect_str_ptr++;
       args[r_index] = NULL;
       num_args -= 1;
     }
@@ -136,9 +149,11 @@ int filter_redirection(char **args, int num_args, int r_index,
     if (num_args - r_index != 2)
       // if there are more arguments after redirection target
       error(NON_FATAL_ERROR);
+    /*error_test(NON_FATAL_ERROR,
+               "filter_redirection: too many arguments after >");*/
     else {
       args[r_index][strlen(args[r_index]) - 1] = '\0';
-      strcpy(redirect_str_ptr, args[r_index + 1]);
+      strcpy(temp_redirect_str_ptr, args[r_index + 1]);
       args[r_index + 1] = NULL;
       num_args -= 1;
     }
@@ -146,12 +161,15 @@ int filter_redirection(char **args, int num_args, int r_index,
 
   case BOTH: // cmd arg>output
     if (num_args - r_index != 1) {
+      // incorrect arguments in and around >
       error(NON_FATAL_ERROR);
+      /*error_test(NON_FATAL_ERROR,
+                 "filter_redirection: incorrect arguments in and around >");*/
     } else {
       // output text
-      strcpy(redirect_str_ptr, args[r_index]);
-      redirect_str_ptr = strchr(redirect_str_ptr, '>');
-      redirect_str_ptr++;
+      strcpy(temp_redirect_str_ptr, args[r_index]);
+      temp_redirect_str_ptr = strchr(temp_redirect_str_ptr, '>');
+      temp_redirect_str_ptr++;
       // argument text
       reverse_string(args[r_index]);              // flip r_arg
       args[r_index] = strchr(args[r_index], '>'); // remove reversed output text
@@ -164,14 +182,16 @@ int filter_redirection(char **args, int num_args, int r_index,
   default:
     // bad args
     error(NON_FATAL_ERROR);
+    // error_test(NON_FATAL_ERROR, "filter_redirection bad args");
   } // end switch
 
+  strcpy(redirect_str_ptr, temp_redirect_str_ptr);
   // printf("final redirection target: %s\n", redirect_str_ptr);
   return num_args;
 }
 
 // redirects input text given to a text file of given name
-void redirect(char text[], char filename[]) {
+void redirect(char text[], int nbytes, char filename[]) {
   /*
   in the external command function, the parent should open a pipe, give it to
   the child to write to, and once it is does writing (command finishes running
@@ -179,16 +199,18 @@ void redirect(char text[], char filename[]) {
   function to finally write it to a real file.
   */
   FILE *fp;
-  char line[MAX_CHARS];
-
-  if (access(filename, F_OK) != 0)
-    truncate(filename, 0); // deletes everything in the file
-
+  char test_filename[MAX_CHARS];
+  strcpy(test_filename, filename);
+  // if (access(filename, F_OK) == 0)
+  //   truncate(filename, 0); // deletes everything in the file
   // opening file for reading
-  fp = fopen(filename, "w");
+  fp = fopen(test_filename, "w");
   if (fp == NULL) {
     error(NON_FATAL_ERROR);
+    // error_test(NON_FATAL_ERROR, "redirect: fp = null");
+  } else {
+    fprintf(fp, "%.*s", nbytes, text);
   }
-  // fprintf(fp, text);
+
   fclose(fp);
 }

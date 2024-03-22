@@ -15,6 +15,7 @@ void cmd_exit(char **text, int num_args) {
     if (str_is_empty(text[1]) == 0)
       exit(0);
     error(NON_FATAL_ERROR);
+    // error_test(NON_FATAL_ERROR, "cmd_exit: exit failed?");
   } else {
     exit(0);
   }
@@ -24,6 +25,7 @@ void cmd_exit(char **text, int num_args) {
 void cmd_cd(char **args, int num_args) {
   if (chdir(args[1]) != 0)
     error(NON_FATAL_ERROR);
+  // error_test(NON_FATAL_ERROR, "cmd_cd: failed");
 }
 
 // chooses one or multiple possible paths to search for executables
