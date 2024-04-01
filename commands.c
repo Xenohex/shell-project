@@ -30,14 +30,12 @@ void cmd_cd(char **args, int num_args) {
 
 // chooses one or multiple possible paths to search for executables
 void cmd_path(char **args, int num_args) {
-  int arg_len = 0;
   if (num_args < 2) {
     strcpy(path[0], "");
     path_count = 1;
   } else {
     for (int i = 1; i < num_args; ++i) {
       strcpy(path[i - 1], args[i]); // copy argument text to path
-      arg_len = strlen(args[i - 1]);
       if (path[i - 1][strlen(path[i - 1]) - 1] !=
           '/') {                  // check if '/' is at the end of the path
         strcat(path[i - 1], "/"); // Concatenate '/' to the end of the path

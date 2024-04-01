@@ -1,8 +1,13 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include "error.h"
+
 #define MAX_ARGS 32
 #define MAX_CHARS 128
+
+// possible positions of text around '>' or '&'
+enum RedirectionTextPosition { ALONE, AFTER, BEFORE, BOTH };
 
 // return 0 if string length < 2, return 1 otherwise
 int str_is_empty(char *str);

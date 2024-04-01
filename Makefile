@@ -1,20 +1,23 @@
-wish: main.o shell.o commands.o redirection.o shared.o error.o
-	gcc -o wish main.o shell.o commands.o redirection.o shared.o error.o -Wall
+wish: main.o shell.o commands.o redirection.o parallel.o shared.o error.o
+	gcc -o wish main.o shell.o commands.o redirection.o parallel.o shared.o error.o -Wall # wish
 
-main: main.c
-	gcc -c main.c -Wall
+main.o: main.c
+	gcc -c main.c -Wall # main
 
-shell: shell.c
-	gcc -c shell.c -Wall
+shell.o: shell.c
+	gcc -c shell.c -Wall # shell
 
-commands: commands.c
-	gcc -c commands.c -Wall
+commands.o: commands.c
+	gcc -c commands.c -Wall # commands
 
-redirection: redirection.c
-	gcc -c redirection.o -Wall
+redirection.o: redirection.c
+	gcc -c redirection.c -Wall # redirection
 
-shared: shared.c
-	gcc -c shared.c -Wall
+parallel.o: parallel.c
+	gcc -c parallel.c -Wall # parallel
 
-error: error.c
-	gcc -c error.c -Wall
+shared.o: shared.c error.o
+	gcc -c shared.c error.o -Wall # shared
+
+error.o: error.c
+	gcc -c error.c -Wall # error

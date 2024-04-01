@@ -1,8 +1,6 @@
 #ifndef REDIRECTION_H
 #define REDIRECTION_H
 
-// possible positions of text around '>'
-enum RedirectionTextPosition { ALONE, AFTER, BEFORE, BOTH };
 /*
 returns index of argument where redirection operator is located
 returns -1 if '>' is not found

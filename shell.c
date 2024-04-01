@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include "commands.h"
-#include "error.h"
 #include "redirection.h"
 #include "shared.h"
 
@@ -98,6 +97,7 @@ void execute_external_cmd(char **args, int num_args) {
             close(link[1]);
           }
           execv(cmd, args);
+          exit(0);
         } else {
           // parent goes down this path (original process)
           close(link[1]);
@@ -153,12 +153,8 @@ void batch_mode(char filename[]) {
       perror("Error opening file");
     }
 
-    char trim_str[MAX_CHARS];
     while (fgets(line, MAX_CHARS, fp) != NULL) {
-
-      // trim_white_space(line, trim_str);
       remove_newline(line);
-      // printf("trim_str: %s", trim_str);
 
       // split up the string
       char *arguments[MAX_CHARS];
