@@ -8,8 +8,6 @@
 int str_is_empty(char *str);
 // replaces all instances of the newline character with the NULL character
 void remove_newline(char *text);
-// removes whitespace
-void trim_white_space(char *str, char *trim_str);
 // split the given arguments into separate pieces
 int split_arguments(char *input, char **args);
 // reverses inputted string

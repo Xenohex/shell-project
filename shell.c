@@ -134,8 +134,9 @@ void interactive_mode() {
 
   // arguments[0] = remove_newline(arguments[0]);
 
-  if (identify_built_in_cmd(arguments, argument_count) == 1)
-    execute_external_cmd(arguments, argument_count);
+  if (argument_count > 0)
+    if (identify_built_in_cmd(arguments, argument_count) == 1)
+      execute_external_cmd(arguments, argument_count);
 }
 
 // ./wish <filename>, interactive mode with predefined commands. runs until
@@ -163,8 +164,9 @@ void batch_mode(char filename[]) {
       char *arguments[MAX_CHARS];
       int argument_count = split_arguments(line, arguments);
 
-      if (identify_built_in_cmd(arguments, argument_count) == 1)
-        execute_external_cmd(arguments, argument_count);
+      if (argument_count > 0)
+        if (identify_built_in_cmd(arguments, argument_count) == 1)
+          execute_external_cmd(arguments, argument_count);
     }
     fclose(fp);
 
