@@ -58,9 +58,9 @@ void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
     args.num_args = commands_num_args[i];
     if (pthread_create(&thread_ids[i], NULL, call_external, &args) != 0)
       error(NON_FATAL_ERROR);
-  }
-  for (int i = 0; i < command_count; i++)
     pthread_join(thread_ids[i], NULL);
+  }
+  // for (int i = 0; i < command_count; i++)
 }
 
 /* returns 0 if parallel found and run, -1 otherwise.
