@@ -22,6 +22,7 @@ int find_parallels(char args[MAX_CHARS], char *cmd_strs[MAX_CHARS]) {
     return -1;
 }
 
+// separates input strings into separated arguments and keeps them in an array
 void separate_parallels(char *cmd_strs[MAX_CHARS], int cmd_strs_count,
                         char *cmds[MAX_ARGS][MAX_CHARS], int *cmd_lengths) {
   for (int i = 0; i < cmd_strs_count; i++) {
@@ -29,13 +30,13 @@ void separate_parallels(char *cmd_strs[MAX_CHARS], int cmd_strs_count,
   }
 }
 
-// DONT CHANGE
+// struct to submit arguments to threaded function
 struct arg_struct {
   char *args[MAX_CHARS];
   int num_args;
 };
 
-// DONT CHANGE
+// calls execute_external_cmd from shell files using arg_struct
 void *call_external(void *arguments) {
   struct arg_struct *args = arguments;
 
@@ -45,7 +46,7 @@ void *call_external(void *arguments) {
   return NULL;
 }
 
-// DONT CHANGE
+// executes commands in parallel on different threads
 void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
                       int commands_num_args[MAX_ARGS], int command_count) {
 
@@ -57,13 +58,13 @@ void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
     args.num_args = commands_num_args[i];
     if (pthread_create(&thread_ids[i], NULL, call_external, &args) != 0)
       error(NON_FATAL_ERROR);
-    pthread_join(thread_ids[i], NULL);
   }
   for (int i = 0; i < command_count; i++)
-    ;
+    pthread_join(thread_ids[i], NULL);
 }
 
-// returns 0 if parallel found and run, -1 otherwise
+/* returns 0 if parallel found and run, -1 otherwise.
+basically completes the whole input to parallelization sequence */
 int try_parallel(char args[MAX_CHARS]) {
   char *command_strs[MAX_CHARS];
   char *commands[MAX_ARGS][MAX_CHARS];
