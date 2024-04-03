@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include "commands.h"
+#include "error.h"
+#include "parallel.h"
 #include "redirection.h"
 #include "shared.h"
 
@@ -15,7 +17,7 @@ extern char path[MAX_ARGS][MAX_CHARS];
 extern int path_count;
 
 // return 0 if command is built in, 1 if not
-int identify_built_in_cmd(char **args, int num_args) {
+int identify_built_in_cmd(char *args[MAX_CHARS], int num_args) {
 
   if (strncmp(args[CMD_INDEX], "exit", 4) == 0) {
     cmd_exit(args, num_args);
@@ -31,7 +33,7 @@ int identify_built_in_cmd(char **args, int num_args) {
 }
 
 // if command cannot be found in internal files, search path for it
-void execute_external_cmd(char **args, int num_args) {
+void execute_external_cmd(char *args[MAX_CHARS], int num_args) {
 
   char output_file[MAX_CHARS] = "";
   char *output_file_p = output_file;
@@ -128,15 +130,14 @@ void interactive_mode() {
 
   remove_newline(input);
 
-  // split up the string
-  char *arguments[MAX_CHARS];
-  int argument_count = split_arguments(input, arguments);
-
-  // arguments[0] = remove_newline(arguments[0]);
-
-  if (argument_count > 0)
-    if (identify_built_in_cmd(arguments, argument_count) == 1)
-      execute_external_cmd(arguments, argument_count);
+  if (try_parallel(input) != 0) {
+    // split up the string
+    char *arguments[MAX_CHARS];
+    int argument_count = split_arguments(input, arguments, " ");
+    if (argument_count > 0)
+      if (identify_built_in_cmd(arguments, argument_count) == 1)
+        execute_external_cmd(arguments, argument_count);
+  }
 }
 
 // ./wish <filename>, interactive mode with predefined commands. runs until
@@ -156,13 +157,14 @@ void batch_mode(char filename[]) {
     while (fgets(line, MAX_CHARS, fp) != NULL) {
       remove_newline(line);
 
-      // split up the string
-      char *arguments[MAX_CHARS];
-      int argument_count = split_arguments(line, arguments);
-
-      if (argument_count > 0)
-        if (identify_built_in_cmd(arguments, argument_count) == 1)
-          execute_external_cmd(arguments, argument_count);
+      if (try_parallel(line) != 0) {
+        // split up the string
+        char *arguments[MAX_CHARS];
+        int argument_count = split_arguments(line, arguments, " ");
+        if (argument_count > 0)
+          if (identify_built_in_cmd(arguments, argument_count) == 1)
+            execute_external_cmd(arguments, argument_count);
+      }
     }
     fclose(fp);
 

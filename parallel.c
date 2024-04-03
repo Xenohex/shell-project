@@ -1,86 +1,84 @@
+#include <pthread.h>
 #include <stdio.h> // REMOVE?
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "error.h"
 #include "shared.h"
-
-/*
-Plan of attack:
-* Identify
-* separate
-* execute (in parallel)
-*/
+#include "shell.h"
 
 /*
 Returns:
--1 if no parallels
-0 if there are parallels
-
-p_list parameter stores list of all parallels
+-1 if no parallels,
+number of parallels otherwise
 */
-int find_parallel(char **args, int num_args, int *p_list) {
-  int p_index_list[num_args];
-  int p_list_counter = 0;
-  int parallel_found = -1;
+int find_parallels(char args[MAX_CHARS], char *cmd_strs[MAX_CHARS]) {
+  int parallels = split_arguments(args, cmd_strs, "&");
 
-  for (int i = 0; i < num_args; i++) {
-    if (strchr(args[i], '&') != NULL) {
-      p_index_list[p_list_counter] = i;
-      parallel_found = 0;
-      p_list_counter++;
-    }
-  }
-  return parallel_found;
+  if (parallels > 1)
+    return parallels;
+  else
+    return -1;
 }
 
-/*
-Finds and returns the types of redirection in array
-0/ALONE, 1/AFTER, 2/BEFORE, 3/BOTH
-*/
-int find_parallel_types(char **args, int num_args, int r_index) {
-  /*
-  if > is alone
-  if > has one argument after
-  if > has one argument before
-  if > has arguments before AND after
-  */
-  int is_both = 0;
-  int condition = -1;
-
-  char r_arg[MAX_CHARS]; // argument w/ redirection
-  char r_arg_backwards[MAX_CHARS];
-  strcpy(r_arg, args[r_index]);
-
-  // ALONE
-  if (strlen(r_arg) == 1) {
-    condition = ALONE;
-  } else { // look for before and/or after
-
-    // AFTER
-    // since strchr includes '>', must be greater than 1
-    if (strlen(strchr(r_arg, '&')) > 1) {
-      condition = AFTER;
-      is_both++;
-    }
-
-    // BEFORE
-    // since strchr includes '>', must be greater than 1
-    strcpy(r_arg_backwards,
-           args[r_index]);           // re-copy argument to new string
-    reverse_string(r_arg_backwards); // reverse the string to check for text on
-                                     // the other side of '>'
-    if (strlen(strchr(r_arg_backwards, '&')) > 1) {
-      condition = BEFORE;
-      is_both++;
-    }
-
-    // BOTH
-    if (is_both == 2) {
-      condition = BOTH;
-    }
+void separate_parallels(char *cmd_strs[MAX_CHARS], int cmd_strs_count,
+                        char *cmds[MAX_ARGS][MAX_CHARS], int *cmd_lengths) {
+  for (int i = 0; i < cmd_strs_count; i++) {
+    cmd_lengths[i] = split_arguments(cmd_strs[i], cmds[i], " ");
   }
-  return condition;
 }
 
-void execute_parallel(char **args, int num_args, int *p_list) {}
+// DONT CHANGE
+struct arg_struct {
+  char *args[MAX_CHARS];
+  int num_args;
+};
+
+// DONT CHANGE
+void *call_external(void *arguments) {
+  struct arg_struct *args = arguments;
+
+  if (args->num_args > 0)
+    execute_external_cmd(args->args, args->num_args);
+  // pthread_exit(NULL); // do i need this?
+  return NULL;
+}
+
+// DONT CHANGE
+void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
+                      int commands_num_args[MAX_ARGS], int command_count) {
+
+  pthread_t thread_ids[command_count];
+  struct arg_struct args;
+
+  for (int i = 0; i < command_count; i++) {
+    copy_char_array(args.args, commands[i], commands_num_args[i]);
+    args.num_args = commands_num_args[i];
+    if (pthread_create(&thread_ids[i], NULL, call_external, &args) != 0)
+      error(NON_FATAL_ERROR);
+    pthread_join(thread_ids[i], NULL);
+  }
+  for (int i = 0; i < command_count; i++)
+    ;
+}
+
+// returns 0 if parallel found and run, -1 otherwise
+int try_parallel(char args[MAX_CHARS]) {
+  char *command_strs[MAX_CHARS];
+  char *commands[MAX_ARGS][MAX_CHARS];
+  int commands_num_args[MAX_ARGS] = {0};
+  // checks if parallel exists
+  if (strcmp(args, "&") == 0) // check to make sure there isn't just a single &
+    return 0;
+  int cmd_count = find_parallels(args, command_strs);
+  if (cmd_count == -1)
+    return -1;
+  else if (cmd_count == 1 && commands_num_args[0] == 0)
+    return 0;
+  else {
+    separate_parallels(command_strs, cmd_count, commands, commands_num_args);
+    execute_parallel(commands, commands_num_args, cmd_count);
+  }
+  return 0;
+}

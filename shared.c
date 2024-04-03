@@ -5,7 +5,7 @@
 
 // What goes here?
 // * anything shared between multiple other files
-// * non-specific use functions
+// * general use functions
 
 // return 0 if string length < 2, return 1 otherwise
 int str_is_empty(char *str) {
@@ -31,14 +31,14 @@ void remove_newline(char *text) {
   // }
 }
 
-// split the given arguments into separate pieces
-int split_arguments(char *input, char **args) {
-  char *token = strtok(input, " ");
+// split the given arguments into separate pieces by character
+int split_arguments(char *input, char **args, const char *c) {
+  char *token = strtok(input, c);
   int argument_count = 0;
 
   for (int i = 0; token != NULL; i++) {
     args[i] = token;
-    token = strtok(NULL, " ");
+    token = strtok(NULL, c);
     argument_count++;
   }
   args[argument_count] = NULL;
@@ -55,12 +55,18 @@ void reverse_string(char *str) {
     str[j] = c;
   }
 }
-
+// fills char ** with stuff from char[][]
+void copy_char_array(char *dest[MAX_CHARS], char *source[MAX_CHARS],
+                     int num_args) {
+  for (int i = 0; i < num_args; i++) {
+    dest[i] = source[i];
+  }
+}
 //
 // FUNCTIONS FOR TESTING PURPOSES ONLY GO HERE
 // These should all probably get removed once the program is finished
 //
-void print_array_pointer(char **args, int num_args) { // REMOVE
+void print_array_pointer(char *args[MAX_CHARS], int num_args) { // REMOVE
   printf("array: ");
   for (int i = 0; i < num_args; i++) {
     printf("%s ", args[i]);
