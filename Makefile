@@ -1,12 +1,9 @@
 wish: main.o shell.o commands.o redirection.o parallel.o shared.o error.o
-	gcc -o wish main.o shell.o commands.o redirection.o parallel.o shared.o error.o -pthread -Wall # wish
+	gcc -o wish main.o shell.o commands.o redirection.o parallel.o shared.o error.o -Wall # wish
 
-test: test.o parallel.o shared.o error.o
-	gcc -o test test.o parallel.o shared.o error.o -Wall # test
-	./test
-
-test.o: test.c
-	gcc -c test.c -Wall # test c file
+clean: 
+	rm -r *.o
+	rm wish
 
 main.o: main.c
 	gcc -c main.c -Wall # main

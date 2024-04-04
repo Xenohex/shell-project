@@ -1,10 +1,10 @@
-#include <pthread.h>
 #include <stdio.h> // REMOVE?
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "error.h"
+#include "parallel.h"
 #include "shared.h"
 #include "shell.h"
 
@@ -42,7 +42,6 @@ void *call_external(void *arguments) {
 
   if (args->num_args > 0)
     execute_external_cmd(args->args, args->num_args);
-  // pthread_exit(NULL); // do i need this?
   return NULL;
 }
 
@@ -50,17 +49,24 @@ void *call_external(void *arguments) {
 void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
                       int commands_num_args[MAX_ARGS], int command_count) {
 
-  pthread_t thread_ids[command_count];
+  int parallel_rcs[command_count];
   struct arg_struct args;
+  int wait_time = 50;
+  int *wait_time_p = &wait_time;
 
   for (int i = 0; i < command_count; i++) {
     copy_char_array(args.args, commands[i], commands_num_args[i]);
     args.num_args = commands_num_args[i];
-    if (pthread_create(&thread_ids[i], NULL, call_external, &args) != 0)
-      error(NON_FATAL_ERROR);
-    pthread_join(thread_ids[i], NULL);
+
+    parallel_rcs[i] = fork();
+    if (parallel_rcs[i] < 0)
+      error(FATAL_ERROR);
+    else if (parallel_rcs[i] == 0) {
+      call_external(&args);
+      exit(0);
+    } else
+      wait(wait_time_p);
   }
-  // for (int i = 0; i < command_count; i++)
 }
 
 /* returns 0 if parallel found and run, -1 otherwise.
