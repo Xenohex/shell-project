@@ -51,8 +51,6 @@ void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
 
   int parallel_rcs[command_count];
   struct arg_struct args;
-  int wait_time = 50;
-  int *wait_time_p = &wait_time;
 
   for (int i = 0; i < command_count; i++) {
     copy_char_array(args.args, commands[i], commands_num_args[i]);
@@ -64,9 +62,10 @@ void execute_parallel(char *commands[MAX_ARGS][MAX_CHARS],
     else if (parallel_rcs[i] == 0) {
       call_external(&args);
       exit(0);
-    } else
-      wait(wait_time_p);
+    }
   }
+  for (int i = 0; i < command_count; i++)
+    wait(NULL);
 }
 
 /* returns 0 if parallel found and run, -1 otherwise.
